@@ -1,0 +1,10 @@
+.ace_gutter-active-line, .ace_gutter-cell, .ace_active-line, .ace_line_group  {
+    height: 24px!important;
+    line-height: 24px!important;
+}
+.ace_cursor {
+    top: 4.5px!important;
+}
+.ace-chrome, .ace_layer, .ace_content{
+    height: 100px!important;
+}
