@@ -1,6 +1,6 @@
 <template>
   <div id="comment" class="card" :class="{conpact: !visibleComment}"
-       v-if="!isBottomPanelOpen && tab === 'result' && queryid">
+       v-if="!isBottomPanelOpen && tab === 'treeview' && queryid">
     <div class="card-header">
       <div class="d-flex justify-content-between align-items-center">
         <div>

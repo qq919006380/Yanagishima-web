@@ -53,7 +53,7 @@
           </tbody>
         </table>
         <div class="alert alert-warning" v-else>
-          <i class="fa fa-fw fa-frown-o mr-1"></i>No result
+          <i class="fa fa-fw fa-frown-o mr-1"></i>暂无数据
         </div>
       </template>
     </div>

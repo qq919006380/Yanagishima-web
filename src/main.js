@@ -18,6 +18,7 @@ import VueCharts from 'vue-charts'
 import BaseAce from '@/components/base/BaseAce'
 import BaseAutoLink from '@/components/base/BaseAutoLink'
 import BaseHighlight from '@/components/base/BaseHighlight'
+import { Loading} from "element-ui";
 
 Sugar.extend()
 
@@ -41,7 +42,8 @@ toastr.options = {
 }
 
 Vue.config.productionTip = false
-
+Vue.use(Loading)
+Vue.use(Loading.directive)
 Vue.use(VueClipboards)
 Vue.use(VueScrollTo)
 Vue.use(VueCharts)

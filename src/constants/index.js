@@ -12,34 +12,34 @@ export const TABS = [
   {
     id: 'treeview',
     icon: 'sitemap',
-    name: 'Treeview'
+    name: '查询'
   },
-  {
-    id: 'qlist',
-    icon: 'tasks',
-    name: 'Query List'
-  },
+  // {
+  //   id: 'qlist',
+  //   icon: 'tasks',
+  //   name: 'Query List'
+  // },
   {
     id: 'history',
     icon: 'history',
-    name: 'History'
+    name: '任务记录'
   },
   {
     id: 'bookmark',
     icon: 'star',
-    name: 'Bookmark'
+    name: '收藏夹'
   },
-  {
-    id: 'result',
-    icon: 'table',
-    name: 'Result'
-  },
-  {
-    id: 'timeline',
-    icon: 'clock',
-    iconStyle: 'far',
-    name: 'Timeline'
-  }
+  // {
+  //   id: 'result',
+  //   icon: 'table',
+  //   name: 'Result'
+  // },
+  // {
+  //   id: 'timeline',
+  //   icon: 'clock',
+  //   iconStyle: 'far',
+  //   name: 'Timeline'
+  // }
 ]
 
 export const HASH_KEYS = [
@@ -63,15 +63,18 @@ export const DATE_COLUMN_NAMES = [
   'log_date'
 ]
 
+
+
+
 export const CHART_TYPES = {
   1: {
-    name: 'Line Chart',
+    name: '线形图',
     type: 'LineChart',
     minRows: 2,
     option: {}
   },
   2: {
-    name: 'Stacked Area Chart',
+    name: '叠加面积图',
     type: 'AreaChart',
     minRows: 3,
     option: {
@@ -79,7 +82,7 @@ export const CHART_TYPES = {
     }
   },
   3: {
-    name: 'Full-Stacked Area Chart',
+    name: '全叠式面积图',
     type: 'AreaChart',
     minRows: 3,
     option: {
@@ -87,7 +90,7 @@ export const CHART_TYPES = {
     }
   },
   4: {
-    name: 'Column Chart',
+    name: '柱状图',
     type: 'ColumnChart',
     minRows: 2,
     option: {
@@ -95,7 +98,7 @@ export const CHART_TYPES = {
     }
   },
   5: {
-    name: 'Stacked Column Chart',
+    name: '叠加柱状图',
     type: 'ColumnChart',
     minRows: 3,
     option: {

@@ -6,7 +6,7 @@
       <TheFooter/>
 
       <!-- sub windows -->
-      <TheComment/>
+      <!-- <TheComment/> -->
       <TheBottomPanel/>
 
       <!-- modals -->
@@ -265,7 +265,7 @@ export default {
       const subTitle = val || this.datasource
       const tab = TABS.find(t => t.id === this.tab)
       let pageTitle = tab.name
-      if (this.tab === 'result' && this.queryid) {
+      if (this.tab === 'treeview' && this.queryid) {
         pageTitle = `#${this.queryid}`
       }
       document.title = `[${subTitle}] ${pageTitle} - ${SITENAME}`

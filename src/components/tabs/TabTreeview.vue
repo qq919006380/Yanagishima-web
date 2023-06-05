@@ -1,244 +1,90 @@
 <template>
   <div id="treeview">
-    <div class="header row align-items-center pt-3">
-      <div class="col-7">
-        <div class="row align-items-end pt-3">
-          <div class="col">
-            <div v-if="datasources.length > 1" class="btn-group mr-2">
-              <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown">
-                {{ datasource }}
-                <strong>{{datasource}}</strong>
-              </button>
-              <div class="dropdown-menu">
-                <a v-for="d in datasources" :key="d" class="dropdown-item" href="#"
-                   @click.prevent="setDatasource(d)" :class="{active: d === datasource}">{{d}}</a>
+    <div class="  row align-items-start  ">
+      <div class="col-3">
+        <Input class="py-3" size="small" placeholder="输入关键字进行过滤" v-model="filterText"></Input>
+        <Tree ref="tree" :filter-node-method="filterNode" :props="props" :load="loadNode" lazy>
+          <span slot-scope="{ node, data }">
+            <span v-if="['catalog', 'schema'].includes(data.type)">
+              <Icon :type="data.type"></Icon>
+              {{ node.label }}
+            </span>
+            <span class="custom-tree-node" v-if="data.type == 'table'">
+              <span @click="showSnippet(data, node)">
+                <Icon :type="data.type"></Icon>
+                <span v-for="(item, index) in node.label" :class="{ tips: index > 0 }">{{ item }}</span>
+              </span>
+              <div @click="openColumnsDialog(data, node)">
+                <Icon class="detail" type="d"></Icon>
               </div>
-            </div>
-            <div v-if="isPresto" class="btn-group">
-              <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown">
-                <small class="text-muted mr-1">Catalog</small>
-                <strong>{{catalog}}</strong></button>
-              <div v-if="catalogs.length" class="dropdown-menu">
-                <a v-for="c in catalogs" :key="c" class="dropdown-item" href="#"
-                   @click.prevent="setCatalog(c)" :class="{active: c === catalog}">{{c}}</a>
-              </div>
-            </div>
-          </div>
-          <div class="col">
-            <div v-if="isPresto" class="pull-right">
-              <small><i class="fa fa-fw fa-circle table-base"></i>Base table</small>
-              <small><i class="fa fa-fw fa-circle table-view"></i>View</small>
-            </div>
-          </div>
-        </div>
+            </span>
+          </span>
+        </Tree>
       </div>
-      <div class="col-5 text-right">
-        <input v-if="isPresto" type="text" :placeholder="`Search by Table in ${catalog}`" v-model.lazy="tableQueryModel"
-               class="form-control form-control-sm d-inline-block w-50" v-focus>
+      <div class="col-9">
+        <TabResult />
       </div>
     </div>
 
-    <!-- main -->
-    <div class="row">
-      <div class="col-7">
-        <template v-if="!tableQuery">
-          <div class="row">
-            <!-- schemata list -->
-            <div class="col-6">
-              <div class="card mb-3">
-                <div class="card-header">
-                  <strong>Schema</strong>
-                  <span v-if="filteredSchemata.length" class="badge badge-default badge-pill">{{filteredSchemata.length}}</span>
-                  <div class="pull-right form-filter">
-                    <i class="fa fa-filter mt-1 mr-1"
-                       :class="{'text-primary': filterSchema.length, 'text-muted': !filterSchema.length}"></i>
-                    <input type="text" class="pull-right form-filter-input" v-model="filterSchemaModel">
-                  </div>
-                </div>
-                <div class="list-group list-group-flush">
-                  <template v-if="(isPresto && catalog || !isPresto) && filteredSchemata.length">
-                    <a v-for="s in filteredSchemata" :key="s" href="#" class="list-group-item"
-                       :class="{active: s === schema}" @click.prevent="setSchema(s)" :id="`schema-${s}`">
-                      <BaseHighlight :sentence="s" :keyword="filterSchema"></BaseHighlight>
-                    </a>
-                  </template>
-                  <template v-else>
-                    <a href="#" class="list-group-item disabled">(N/A)</a>
-                  </template>
-                </div>
-              </div>
-            </div>
+    <div>
 
-            <!-- tables list -->
-            <div class="col-6">
-              <div class="card mb-3">
-                <div class="card-header">
-                  <strong>Table</strong>
-                  <span v-if="filteredTables.length" class="badge badge-default badge-pill">{{filteredTables.length}}</span>
-                  <div class="pull-right form-filter">
-                    <i class="fa fa-filter mt-1 mr-1"
-                       :class="{'text-primary': filterTable.length, 'text-muted': !filterTable.length}"></i>
-                    <input type="text" class="pull-right form-filter-input" v-model="filterTableModel">
-                  </div>
-                </div>
-                <div class="list-group list-group-flush">
-                  <template v-if="schema && filteredTables.length || isElasticsearch && filteredTables.length">
-                    <a v-for="t in filteredTables" :key="t[0]" href="#" class="list-group-item"
-                       :class="{active: t[0] === table, 'table-base': isPresto && t[1] !== 'VIEW', 'table-view': isPresto && t[1] === 'VIEW'}"
-                       @click.prevent="setTable(t)" :id="`table-${t[0]}`">
-                      <button class="btn btn-sm btn-secondary clip px-2" v-clipboard="fullName(t[0])" @click.stop.prevent="">
-                        <i class="fa fa-fw fa-clipboard"></i>
-                      </button>
-                      <BaseHighlight :sentence="t[0]" :keyword="filterTable"></BaseHighlight>
-                    </a>
-                  </template>
-                  <template v-else>
-                    <a href="#" class="list-group-item disabled">(N/A)</a>
-                  </template>
-                </div>
-              </div>
-            </div>
-          </div>
-        </template>
 
-        <!-- table name search -->
-        <template v-else>
-          <div class="card mb-3">
-            <div class="card-header">
-              <a href="#" class="text-muted mr-2" @click.prevent="clearTableQuery"><i class="fa fa-times"></i></a>
-              "<strong>{{tableQuery}}</strong>" in {{catalog}}
-              <template v-if="tableSearchResponse.length">
-                <strong class="ml-2">{{tableSearchResponse.length}}</strong>
-                results
-              </template>
-            </div>
-            <div class="list-group list-group-flush">
-              <template v-if="loadingTableSearch">
-                <div class="list-group-item">
-                  <i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Searching
-                </div>
-              </template>
-              <template v-else>
-                <template v-if="tableSearchResponse">
-                  <a v-for="(item, i) in tableSearchResponse" :key="i" href="#" class="list-group-item ellipsis"
-                     @click.prevent="setSearchedTable(item)"
-                     :class="{active: item[0] === catalog && item[1] === schema && item[2] === table, 'table-view': item[3] === 'VIEW'}">
-                    <button class="btn btn-sm btn-secondary clip"
-                            v-clipboard="[item[0], item[1], item[2]].join('.')"><i
-                      class="fa fa-fw fa-clipboard"></i></button>
-                    <BaseHighlight :sentence="item[0]" :keyword="tableQuery"></BaseHighlight>
-                    <span class="mx-1">/</span>
-                    <BaseHighlight :sentence="item[1]" :keyword="tableQuery"></BaseHighlight>
-                    <span class="mx-1">/</span>
-                    <BaseHighlight :sentence="item[2]" :keyword="tableQuery"></BaseHighlight>
-                  </a>
-                </template>
-                <template v-else>
-                  <a href="#" class="list-group-item disabled">(Not Found)</a>
-                </template>
-              </template>
-            </div>
-          </div>
-        </template>
 
-        
-      </div>
-
-      <!-- Columns table -->
-      <div class="col-5">
-        <template v-if="table && columns.length">
-          <template v-if="isMetadataService">
-            <template v-if="note">
-              <div><pre><BaseAutoLink :text="note.escapeHTML()"></BaseAutoLink></pre></div>
-            </template>
-            <div id="columns">
-              <table class="table table-striped table-hover table-fixed mb-0">
-                <thead>
-                <tr>
-                  <th width="30%">Column<span
-                    class="badge badge-default badge-pill ml-1">{{columns.length}}</span>
-                  </th>
-                  <th width="10%">Type</th>
-                  <th width="10%">Extra</th>
-                  <th width="10%">Comment</th>
-                  <th width="30%">Note</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="column in columns" :key="column[0]">
-                  <td :title="column[0]">
-                    <a v-if="column[0] === partitionKeys[0]" href="#partition" data-toggle="modal"
-                      @click.prevent="getPartitions">
-                      {{column[0]}}
-                    </a>
-                    <template v-else>
-                      {{column[0]}}
-                    </template>
-                  </td>
-                  <td class="text-muted">{{column[1]}}</td>
-                  <td>{{column[2]}}</td>
-                  <td>{{column[3]}}</td>
-                  <td>{{column[4]}}</td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-            <template v-if="meta">
-              <div><pre>{{meta}}</pre></div>
-            </template>
-          </template>
-          <template v-else>
-            <div id="columns">
-              <table class="table table-striped table-hover table-fixed mb-0">
-                <thead>
-                <tr>
-                  <th width="40%">Column<span
-                    class="badge badge-default badge-pill ml-1">{{columns.length}}</span>
-                  </th>
-                  <th width="20%">Type</th>
-                  <th width="20%">Extra</th>
-                  <th width="20%">Comment</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="column in columns" :key="column[0]">
-                  <td :title="column[0]">
-                    <a v-if="column[0] === partitionKeys[0]" href="#partition" data-toggle="modal"
-                      @click.prevent="getPartitions">
-                      {{column[0]}}
-                    </a>
-                    <template v-else>
-                      {{column[0]}}
-                    </template>
-                  </td>
-                  <td class="text-muted">{{column[1]}}</td>
-                  <td>{{column[2]}}</td>
-                  <td>{{column[3]}}</td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-          </template>
-        </template>
-      </div>
     </div>
+    <Dialog title="字段" :visible.sync="dialogVisible" width="50%">
+      <Table v-loading="loading" :data="columnsTableData" height="500px" style="width: 100%">
+        <Table-column prop="column" label="列"></Table-column>
+        <Table-column prop="type" label="类型"></Table-column>
+        <Table-column prop="extra" label="说明"></Table-column>
+        <Table-column prop="comment" label="备注"></Table-column>
+      </Table>
+      <span slot="footer" class="dialog-footer">
+        <Button @click="dialogVisible = false">关 闭</Button>
+      </span>
+    </Dialog>
   </div>
 </template>
 
 <script>
 import toastr from 'toastr'
-import {mapState, mapGetters} from 'vuex'
+
+import TabResult from '@/components/tabs/TabResult'
+import Icon from './icon'
+import { mapState, mapGetters } from 'vuex'
+// import { Tree } from "ant-design-vue";
+import { Tree, Input, Dialog, Button, Table, TableColumn } from "element-ui";
 
 export default {
   name: 'TabTreeview',
-  data () {
+  components: { TabResult, Tree, Icon, Input, Dialog, Button, Table, TableColumn },
+  data() {
     return {
+      loading: false,
+      dialogVisible: false,
+      filterText: "",
       isExpandColumns: false,
       snippetIndex: 0,
-      scrollTo: {}
+      scrollTo: {},
+      props: {
+        label: 'title',
+        children: 'zones',
+        isLeaf: 'leaf'
+      },
     }
   },
   computed: {
+    columnsTableData() {
+      var a = this.columns.map(v => {
+        return {
+          column: v[0],
+          type: v[1],
+          extra: v[3],
+          comment: v[4]
+
+        }
+      })
+      return a
+    },
     ...mapState({
       datasources: state => state.datasources,
       datasource: state => state.hash.datasource,
@@ -259,6 +105,7 @@ export default {
       'filterSchema',
       'filterTable',
       'loadingTableSearch',
+      'loadingPartitions',
       'tableSearchResponse'
     ]),
     ...mapGetters([
@@ -274,135 +121,187 @@ export default {
       'otherColumns',
       'partitionKeys'
     ]),
-    filteredSchemata () {
+    filteredSchemata() {
       return this.schemata.filter(s => s.includes(this.filterSchema))
     },
-    filteredTables () {
+    filteredTables() {
       return this.tables.filter(s => s[0].includes(this.filterTable))
     },
     tableQueryModel: {
-      get () {
+      get() {
         return this.tableQuery
       },
-      set (val) {
-        this.$store.commit('treeview/setTableQuery', {data: val})
+      set(val) {
+        this.$store.commit('treeview/setTableQuery', { data: val })
       }
     },
     filterSchemaModel: {
-      get () {
+      get() {
         return this.filterSchema
       },
-      set (val) {
-        this.$store.commit('treeview/setFilterSchema', {data: val})
+      set(val) {
+        this.$store.commit('treeview/setFilterSchema', { data: val })
       }
     },
     filterTableModel: {
-      get () {
+      get() {
         return this.filterTable
       },
-      set (val) {
-        this.$store.commit('treeview/setFilterTable', {data: val})
+      set(val) {
+        this.$store.commit('treeview/setFilterTable', { data: val })
       }
     },
-    
+
   },
   watch: {
-    datasourceEngine () {
-      this.$store.commit('setHashItem', {table: ''})
+    filterText(val) {
+      this.$refs.tree.filter(val);
+    },
+    datasourceEngine() {
+      this.$store.commit('setHashItem', { table: '' })
       this.$store.dispatch('treeview/getRoot')
     },
-    catalog (val) {
-      if (val) {
-        if (this.scrollTo.catalog && this.scrollTo.catalog !== val) {
-          this.setCatalog(this.scrollTo.catalog)
-          this.scrollTo.catalog = null
-          return
-        }
-        this.$store.dispatch('treeview/getSchemata')
-        this.$store.dispatch('editor/getCompleteWords')
-      }
-      this.$store.commit('treeview/setTableQuery', {data: ''})
-    },
-    schema (val) {
-      if (val) {
-        if (this.scrollTo.schema && this.scrollTo.schema !== val) {
-          if (!this.schemata.includes(this.scrollTo.schema)) {
-            toastr.error(`schema not found: ${this.scrollTo.schema}`)
-            this.scrollTo = {}
-            return
-          }
-          this.setSchema(this.scrollTo.schema)
-          return
-        }
-        this.$store.dispatch('treeview/getTables')
-          .then(() => {
-            if (this.scrollTo.schema) {
-              document.getElementById(`schema-${this.scrollTo.schema}`).scrollIntoView()
-              window.scrollTo(0, 0)
-              this.scrollTo.schema = null
-            }
-            if (this.scrollTo.table) {
-              const table = this.tables.find(t => t[0] === this.scrollTo.table)
-              if (!table) {
-                toastr.error(`table not found: ${this.scrollTo.table}`)
-                this.scrollTo = {}
-                return
-              }
-              this.setTable(table)
-              document.getElementById(`table-${table[0]}`).scrollIntoView()
-              window.scrollTo(0, 0)
-              this.scrollTo.table = null
-            }
-          })
-      }
-    },
-    table (val) {
-      if (val) {
-        this.$store.dispatch('treeview/getColumns')
-      }
-    },
-    tableQuery () {
-      this.searchTable()
-    }
+    // catalog(val) {
+    //   console.log(val)
+    // if (val) {
+    //   if (this.scrollTo.catalog && this.scrollTo.catalog !== val) {
+    //     this.setCatalog(this.scrollTo.catalog)
+    //     this.scrollTo.catalog = null
+    //     return
+    //   }
+    //   this.$store.dispatch('treeview/getSchemata')
+    //   this.$store.dispatch('editor/getCompleteWords')
+    // }
+    // this.$store.commit('treeview/setTableQuery', { data: '' })
+    // },
+    // schema(val) {
+    // if (val) {
+    //   if (this.scrollTo.schema && this.scrollTo.schema !== val) {
+    //     if (!this.schemata.includes(this.scrollTo.schema)) {
+    //       toastr.error(`schema not found: ${this.scrollTo.schema}`)
+    //       this.scrollTo = {}
+    //       return
+    //     }
+    //     this.setSchema(this.scrollTo.schema)
+    //     return
+    //   }
+    //   this.$store.dispatch('treeview/getTables')
+    //     .then(() => {
+    //       if (this.scrollTo.schema) {
+    //         document.getElementById(`schema-${this.scrollTo.schema}`).scrollIntoView()
+    //         window.scrollTo(0, 0)
+    //         this.scrollTo.schema = null
+    //       }
+    //       if (this.scrollTo.table) {
+    //         const table = this.tables.find(t => t[0] === this.scrollTo.table)
+    //         if (!table) {
+    //           toastr.error(`table not found: ${this.scrollTo.table}`)
+    //           this.scrollTo = {}
+    //           return
+    //         }
+    //         this.setTable(table)
+    //         document.getElementById(`table-${table[0]}`).scrollIntoView()
+    //         window.scrollTo(0, 0)
+    //         this.scrollTo.table = null
+    //       }
+    //     })
+    // }
+    // },
+    // table(val) {
+    //   if (val) {
+    //     this.$store.dispatch('treeview/getColumns')
+    //   }
+    // },
+    // tableQuery() {
+    //   this.searchTable()
+    // }
   },
-  created () {
+  created() {
     if (this.initialTable) {
       if (this.isPresto || this.isHive || this.isSpark) {
         this.$store.commit('treeview/init')
         const t = this.initialTable.split('.')
         if (this.isPresto) {
-          this.scrollTo = {catalog: t[0], schema: t[1], table: t[2]}
+          this.scrollTo = { catalog: t[0], schema: t[1], table: t[2] }
         } else {
-          this.scrollTo = {schema: t[0], table: t[1]}
+          this.scrollTo = { schema: t[0], table: t[1] }
         }
       }
     }
 
     this.$store.dispatch('treeview/getRoot')
   },
-  beforeDestroy () {
-    this.$store.commit('setHashItem', {table: ''})
+  beforeDestroy() {
+    this.$store.commit('setHashItem', { table: '' })
   },
   methods: {
-    setDatasource (datasource) {
-      this.$store.commit('setHashItem', {datasource})
+
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.title.indexOf(value) !== -1;
     },
-    setCatalog (catalog) {
-      this.$store.commit('treeview/setCatalog', {data: catalog})
-      this.$store.commit('treeview/setSchema', {data: ''})
-      this.$store.commit('treeview/setTable', {data: ['', '']})
+    async loadNode(node, resolve) {
+      console.log(node)
+      if (node.level === 0) {
+        await this.$store.dispatch('treeview/getCatalogs')
+        var data = this.catalogs.map(v => {
+          return { title: v, type: "catalog" }
+        })
+        return resolve(data);
+      } else if (node.level === 1) {
+        this.setCatalog(node.data.title)
+        await this.$store.dispatch('treeview/getSchemata')
+        this.$store.dispatch('editor/getCompleteWords')
+        this.$store.commit('treeview/setTableQuery', { data: '' })
+        var data = this.schemata.map(v => {
+          return { title: v, type: "schema" }
+        })
+        return resolve(data);
+      } else if (node.level === 2) {
+        this.setCatalog(node.parent.data.title)
+        this.setSchema(node.data.title)
+        await this.$store.dispatch('treeview/getTables')
+        var data = this.tables.map(v => {
+          return { title: v, leaf: true, type: 'table' }
+        })
+        return resolve(data);
+      }
+
+
     },
-    setSchema (schema) {
-      this.$store.commit('treeview/setSchema', {data: schema})
-      this.$store.commit('treeview/setTable', {data: ['', '']})
+    showSnippet(data, node) {
+      this.setCatalog(node.parent.parent.data.title)
+      this.setSchema(node.parent.data.title)
+      this.setTable(data.title)
     },
-    setTable (table) {
-      this.$store.commit('treeview/setTable', {data: table})
+    async openColumnsDialog(data, node) {
+      this.loading = true
+      this.dialogVisible = true
+      this.setCatalog(node.parent.parent.data.title)
+      this.setSchema(node.parent.data.title)
+      this.setTable(data.title)
+      await this.$store.dispatch('treeview/getColumns')
+      this.loading = false
     },
-    getPartitions () {
+    onSelect(data) {
+      console.log(data)
+    },
+    setDatasource(datasource) {
+      this.$store.commit('setHashItem', { datasource })
+    },
+    setCatalog(catalog) {
+      this.$store.commit('treeview/setCatalog', { data: catalog })
+    },
+    setSchema(schema) {
+      this.$store.commit('treeview/setSchema', { data: schema })
+    },
+    setTable(table) {
+      this.$store.commit('treeview/setTable', { data: table })
+    },
+    getPartitions() {
       this.$store.dispatch('treeview/getPartitions')
     },
-    fullName (table) {
+    fullName(table) {
       if (this.isPresto) {
         return [this.catalog, this.schema, table].join('.')
       } else if (this.isHive || this.isSpark) {
@@ -413,7 +312,7 @@ export default {
         throw new Error('not supported')
       }
     },
-    setSnippet () {
+    setSnippet() {
       let snippet = this.snippets[this.snippetIndex].sql
       this.$store.commit('editor/setInputQuery', {
         data: snippet.format({
@@ -426,31 +325,60 @@ export default {
         })
       })
     },
-    runSnippet () {
+    runSnippet() {
       this.setSnippet()
       this.$store.dispatch('result/runQuery')
-      this.$store.commit('setHashItem', {tab: 'result'})
+      this.$store.commit('setHashItem', { tab: 'treeview' })
     },
-    searchTable () {
+    searchTable() {
       this.$store.dispatch('treeview/searchTable')
     },
-    setSearchedTable (item) {
+    setSearchedTable(item) {
       const [catalog, schema, table, tableType] = item
-      this.$store.commit('treeview/setCatalog', {data: catalog})
-      this.$store.commit('treeview/setSchema', {data: schema})
-      this.$store.commit('treeview/setTable', {data: [table, tableType]})
+      this.$store.commit('treeview/setCatalog', { data: catalog })
+      this.$store.commit('treeview/setSchema', { data: schema })
+      this.$store.commit('treeview/setTable', { data: [table, tableType] })
     },
-    clearTableQuery () {
+    clearTableQuery() {
       this.tableQueryModel = ''
-      this.$store.commit('treeview/setTableSearchResponse', {data: []})
-      this.$store.commit('treeview/setTable', {data: ['', '']})
+      this.$store.commit('treeview/setTableSearchResponse', { data: [] })
+      this.$store.commit('treeview/setTable', { data: ['', ''] })
     }
   }
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.tips {
+  color: #999;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
 .pull-right {
   float: right;
+}
+
+.detail {
+  cursor: pointer;
+  transition: all 0.3s;
+  opacity: 0;
+}
+
+.custom-tree-node:hover {
+  .detail {
+    opacity: 1;
+  }
+}
+
+.custom-tree-node {
+  width: 250px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 8px;
+
+
 }
 </style>

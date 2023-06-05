@@ -43,13 +43,13 @@
               {{comment.user || 'Someone'}}
             </td>
             <td>
-              <a :href="buildUrl({datasource, engine, tab: 'result', queryid: comment.queryid})">{{comment.queryid}}</a>
+              <a :href="buildUrl({datasource, engine, tab: 'treeview', queryid: comment.queryid})">{{comment.queryid}}</a>
             </td>
           </tr>
           </tbody>
         </table>
         <div class="alert alert-warning" v-else>
-          <i class="fa fa-fw fa-frown-o mr-1"></i>No result
+          <i class="fa fa-fw fa-frown-o mr-1"></i>暂无数据
         </div>
       </template>
     </div>

@@ -59,7 +59,7 @@
                   <span class="mr-2" v-if="response.headers">
                     <strong>{{response.headers.length}}</strong><span class="text-muted ml-1">columns</span>
                   </span>
-                  <span v-else><strong>No result</strong></span>
+                  <span v-else><strong>暂无数据</strong></span>
                 </template>
               </template>
             </div>

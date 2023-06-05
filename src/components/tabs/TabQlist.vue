@@ -61,7 +61,7 @@
               </td>
               <td>
                 <template v-if="item.existdb && (item.state === 'FINISHED' || item.state === 'FAILED')">
-                  <a :href="buildUrl({datasource, engine, tab: 'result', queryid: item.queryId})">{{item.queryId}}</a>
+                  <a :href="buildUrl({datasource, engine, tab: 'treeview', queryid: item.queryId})">{{item.queryId}}</a>
                 </template>
                 <template v-else>
                   {{item.queryId}}
@@ -85,7 +85,7 @@
             </tbody>
           </table>
           <div class="alert alert-warning" v-else>
-            <i class="fa fa-fw fa-frown-o mr-1"></i>No result
+            <i class="fa fa-fw fa-frown-o mr-1"></i>暂无数据
           </div>
         </template>
         <template v-else-if="isHive">
@@ -121,7 +121,7 @@
               <td class="text-right">{{item.elapsedTime | formatUnit}}</td>
               <td class="ace-font">
                 <template v-if="item.existdb && (item.state === 'FINISHED' || item.state === 'FAILED')">
-                  <a :href="buildUrl({datasource, engine, tab: 'result', queryid: getHiveQueryid(item.name)})">{{item.name}}</a>
+                  <a :href="buildUrl({datasource, engine, tab: 'treeview', queryid: getHiveQueryid(item.name)})">{{item.name}}</a>
                 </template>
                 <template v-else>
                   {{item.name}}
@@ -135,7 +135,7 @@
             </tbody>
           </table>
           <div class="alert alert-warning" v-else>
-            <i class="fa fa-fw fa-frown-o mr-1"></i>No result
+            <i class="fa fa-fw fa-frown-o mr-1"></i>暂无数据
           </div>
         </template>
         <template v-else-if="isSpark">
@@ -180,7 +180,7 @@
             </tbody>
           </table>
           <div class="alert alert-warning" v-else>
-            <i class="fa fa-fw fa-frown-o mr-1"></i>No result
+            <i class="fa fa-fw fa-frown-o mr-1"></i>暂无数据
           </div>
         </template>
       </template>

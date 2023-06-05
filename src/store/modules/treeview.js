@@ -1,6 +1,6 @@
 import toastr from 'toastr'
 import * as api from '@/api'
-import {DATE_COLUMN_NAMES} from '@/constants'
+import { DATE_COLUMN_NAMES } from '@/constants'
 
 const defaultCatalog = 'hive'
 
@@ -31,33 +31,33 @@ const state = () => {
 }
 
 const getters = {
-  dateColumn (state) {
+  dateColumn(state) {
     return state.columns.map(c => c[0]).find(c => DATE_COLUMN_NAMES.includes(c)) || ''
   },
-  otherColumns (state) {
+  otherColumns(state) {
     return state.columns.map(c => c[0]).filter(c => !DATE_COLUMN_NAMES.includes(c))
   },
-  partitionKeys (state) {
+  partitionKeys(state) {
     return state.columns.filter(c => c[2] === 'partition key').map(c => c[0])
   },
-  partitionKeysTypes (state) {
+  partitionKeysTypes(state) {
     return state.columns.filter(c => c[2] === 'partition key').map(c => c[1])
   },
-  columnTypesMap (state) {
-    return state.columns.reduce((map, c) => Object.assign(map, {[c[0]]: c[1]}), {})
+  columnTypesMap(state) {
+    return state.columns.reduce((map, c) => Object.assign(map, { [c[0]]: c[1] }), {})
   }
 }
 
 const actions = {
-  async getRoot ({dispatch, state, rootGetters}) {
-    const {isPresto, isElasticsearch} = rootGetters
-    const {catalog, schema, table} = state
+  async getRoot({ dispatch, state, rootGetters }) {
+    const { isPresto, isElasticsearch } = rootGetters
+    const { catalog, schema, table } = state
 
     if (isElasticsearch) {
       dispatch('getTables')
       return
     }
-
+    dispatch('getCatalogs')
     if (isPresto && !catalog) {
       dispatch('getCatalogs')
     } else if (!schema) {
@@ -66,60 +66,69 @@ const actions = {
       dispatch('getTables')
     }
   },
-  async getCatalogs ({commit, dispatch, state, rootState, rootGetters}) {
-    const {datasource} = rootState.hash
-    const {authInfo, isPresto} = rootGetters
+  getCatalogs({ commit, dispatch, state, rootState, rootGetters }) {
+    return new Promise(async res => {
+      const { datasource } = rootState.hash
+      const { authInfo, isPresto } = rootGetters
 
-    if (!isPresto) {
-      throw Error('getCatalogs are not supported except for presto')
-    }
+      if (!isPresto) {
+        throw Error('getCatalogs are not supported except for presto')
+      }
 
-    const data = await api.getCatalogsPresto(datasource, authInfo)
+      const data = await api.getCatalogsPresto(datasource, authInfo)
 
-    if (data.results && data.results.length) {
-      commit('setCatalogs', {data: data.results.map(r => r[0])})
-      if (state.catalogs.includes(defaultCatalog)) {
-        commit('setCatalog', {data: defaultCatalog})
+      if (data.results && data.results.length) {
+        commit('setCatalogs', { data: data.results.map(r => r[0]) })
+        if (state.catalogs.includes(defaultCatalog)) {
+          commit('setCatalog', { data: defaultCatalog })
+        } else {
+          commit('setCatalog', { data: state.catalogs[0] })
+        }
       } else {
-        commit('setCatalog', {data: state.catalogs[0]})
+        commit('setCatalogs', { data: [] })
+        if (data.error) {
+          toastr.error(data.error)
+        }
       }
-    } else {
-      commit('setCatalogs', {data: []})
-      if (data.error) {
-        toastr.error(data.error)
-      }
-    }
-  },
-  async getSchemata ({commit, state, rootState, rootGetters}) {
-    const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark} = rootGetters
-    const {catalog} = state
+      res()
+    })
 
-    let data
-    if (isPresto) {
-      data = await api.getSchemataPresto(datasource, catalog, authInfo)
-    } else if (isHive) {
-      data = await api.getSchemataHive(datasource, authInfo)
-    } else if (isSpark) {
-      data = await api.getSchemataSpark(datasource, authInfo)
-    } else {
-      throw new Error('not supported')
-    }
-
-    if (data.results && data.results.length) {
-      commit('setSchemata', {data: data.results.map(r => r[0])})
-      commit('setSchema', {data: state.schemata[0]})
-    } else {
-      commit('setSchemata', {data: []})
-      if (data.error) {
-        toastr.error(data.error)
-      }
-    }
   },
-  async getTables ({commit, state, rootState, rootGetters}) {
-    const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark, isElasticsearch} = rootGetters
-    const {catalog, schema} = state
+
+  getSchemata({ commit, state, rootState, rootGetters }) {
+    return new Promise(async res => {
+      const { datasource } = rootState.hash
+      const { authInfo, isPresto, isHive, isSpark } = rootGetters
+      const { catalog } = state
+
+      let data
+      if (isPresto) {
+        data = await api.getSchemataPresto(datasource, catalog, authInfo)
+      } else if (isHive) {
+        data = await api.getSchemataHive(datasource, authInfo)
+      } else if (isSpark) {
+        data = await api.getSchemataSpark(datasource, authInfo)
+      } else {
+        throw new Error('not supported')
+      }
+
+      if (data.results && data.results.length) {
+        commit('setSchemata', { data: data.results.map(r => r[0]) })
+        commit('setSchema', { data: state.schemata[0] })
+      } else {
+        commit('setSchemata', { data: [] })
+        if (data.error) {
+          toastr.error(data.error)
+        }
+      }
+      res()
+    })
+
+  },
+  async getTables({ commit, state, rootState, rootGetters }) {
+    const { datasource } = rootState.hash
+    const { authInfo, isPresto, isHive, isSpark, isElasticsearch } = rootGetters
+    const { catalog, schema } = state
 
     let data
     if (isPresto) {
@@ -143,72 +152,75 @@ const actions = {
         })
       })
     } else {
-      commit('setTables', {data: []})
+      commit('setTables', { data: [] })
       if (data.error) {
         toastr.error(data.error)
       }
     }
   },
-  async getColumns ({commit, state, rootState, rootGetters}) {
-    const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark, isElasticsearch} = rootGetters
-    const {catalog, schema, table} = state
+  getColumns({ commit, state, rootState, rootGetters }) {
+    return new Promise(async res => {
+      const { datasource } = rootState.hash
+      const { authInfo, isPresto, isHive, isSpark, isElasticsearch } = rootGetters
+      const { catalog, schema, table } = state
 
-    if (isPresto && !catalog) {
-      return false
-    }
-
-    if (!isElasticsearch && !schema) {
-      return false
-    }
-
-    if (!table) {
-      return false
-    }
-
-    let data
-    if (isPresto) {
-      data = await api.getColumnsPresto(datasource, catalog, schema, table, authInfo)
-    } else if (isHive) {
-      data = await api.getColumnsHive(datasource, schema, table, authInfo)
-    } else if (isSpark) {
-      data = await api.getColumnsSpark(datasource, schema, table, authInfo)
-    } else if (isElasticsearch) {
-      data = await api.getColumnsElasticsearch(datasource, table, authInfo)
-    } else {
-      throw new Error('not supported')
-    }
-
-    if (data.results && data.results.length) {
-      let columns = data.results
-      const note = data.note
-      const meta = data.meta
-      if (!isPresto) {
-        columns = columns
-          .filter(c => c[0] && !c[0].includes('#'))
-          .reduce((arr, c) => {
-            const index = arr.findIndex(existColumn => existColumn[0] === c[0])
-            if (index === -1) {
-              arr.push([c[0], c[1], null, null])
-            } else {
-              arr[index][2] = 'partition key'
-            }
-            return arr
-          }, [])
+      if (isPresto && !catalog) {
+        return false
       }
-      commit('setColumns', {columns, note, meta})
-    } else {
-      commit('setColumns', {data: []})
-      if (data.error) {
-        toastr.error(data.error)
+
+      if (!isElasticsearch && !schema) {
+        return false
       }
-    }
+
+      if (!table) {
+        return false
+      }
+
+      let data
+      if (isPresto) {
+        data = await api.getColumnsPresto(datasource, catalog, schema, table, authInfo)
+      } else if (isHive) {
+        data = await api.getColumnsHive(datasource, schema, table, authInfo)
+      } else if (isSpark) {
+        data = await api.getColumnsSpark(datasource, schema, table, authInfo)
+      } else if (isElasticsearch) {
+        data = await api.getColumnsElasticsearch(datasource, table, authInfo)
+      } else {
+        throw new Error('not supported')
+      }
+
+      if (data.results && data.results.length) {
+        let columns = data.results
+        const note = data.note
+        const meta = data.meta
+        if (!isPresto) {
+          columns = columns
+            .filter(c => c[0] && !c[0].includes('#'))
+            .reduce((arr, c) => {
+              const index = arr.findIndex(existColumn => existColumn[0] === c[0])
+              if (index === -1) {
+                arr.push([c[0], c[1], null, null])
+              } else {
+                arr[index][2] = 'partition key'
+              }
+              return arr
+            }, [])
+        }
+        commit('setColumns', { columns, note, meta })
+      } else {
+        commit('setColumns', { data: [] })
+        if (data.error) {
+          toastr.error(data.error)
+        }
+      }
+      res()
+    })
   },
-  async getPartitions ({commit, state, getters, rootState, rootGetters}) {
-    const {datasource} = rootState.hash
-    const {authInfo, isPresto, isHive, isSpark} = rootGetters
-    const {catalog, schema, table, selectedPartitions} = state
-    const {partitionKeys, columnTypesMap} = getters
+  async getPartitions({ commit, state, getters, rootState, rootGetters }) {
+    const { datasource } = rootState.hash
+    const { authInfo, isPresto, isHive, isSpark } = rootGetters
+    const { catalog, schema, table, selectedPartitions } = state
+    const { partitionKeys, columnTypesMap } = getters
 
     const option = {}
 
@@ -226,7 +238,7 @@ const actions = {
         }
       }
     }
-    commit('deletePartitionValues', {keys: partitionKeys, remainKey})
+    commit('deletePartitionValues', { keys: partitionKeys, remainKey })
 
     if (!Object.isEmpty(selectedPartitions)) {
       const keys = []
@@ -243,7 +255,7 @@ const actions = {
       option.partitionValue = vals.join(',')
     }
 
-    commit('setLoadingPartitions', {loading: true})
+    commit('setLoadingPartitions', { loading: true })
 
     let data
     if (isPresto) {
@@ -259,37 +271,37 @@ const actions = {
     if (data.error) {
       toastr.error(data.error)
     } else if (data.column && data.partitions) {
-      commit('setPartitionValues', {keys: partitionKeys, key: data.column, values: data.partitions})
+      commit('setPartitionValues', { keys: partitionKeys, key: data.column, values: data.partitions })
     }
 
-    commit('setLoadingPartitions', {loading: false})
+    commit('setLoadingPartitions', { loading: false })
   },
-  async searchTable ({commit, state, rootState, rootGetters}) {
-    const {datasource} = rootState.hash
-    const {catalog, tableQuery} = state
-    const {authInfo} = rootGetters
+  async searchTable({ commit, state, rootState, rootGetters }) {
+    const { datasource } = rootState.hash
+    const { catalog, tableQuery } = state
+    const { authInfo } = rootGetters
 
-    commit('setTable', {data: ['', '']})
-    commit('setTableSearchResponse', {data: []})
+    commit('setTable', { data: ['', ''] })
+    commit('setTableSearchResponse', { data: [] })
 
     if (tableQuery === '') {
       return false
     }
 
-    commit('setLoadingTableSearch', {loading: true})
+    commit('setLoadingTableSearch', { loading: true })
 
     try {
       const data = await api.searchTable(datasource, catalog, tableQuery, authInfo)
-      commit('setTableSearchResponse', {data: data.results})
-      commit('setLoadingTableSearch', {loading: false})
+      commit('setTableSearchResponse', { data: data.results })
+      commit('setLoadingTableSearch', { loading: false })
     } catch (e) {
-      commit('setLoadingTableSearch', {loading: false})
+      commit('setLoadingTableSearch', { loading: false })
     }
   }
 }
 
 const mutations = {
-  init (state) {
+  init(state) {
     state.catalogs = []
     state.schemata = []
     state.tables = []
@@ -306,31 +318,31 @@ const mutations = {
     state.filterTable = ''
     state.tableSearchResponse = []
   },
-  setCatalogs (state, {data}) {
+  setCatalogs(state, { data }) {
     state.catalogs = data
   },
-  setSchemata (state, {data}) {
+  setSchemata(state, { data }) {
     state.schemata = data
   },
-  setTables (state, {data}) {
+  setTables(state, { data }) {
     state.tables = data
   },
-  setCatalog (state, {data}) {
+  setCatalog(state, { data }) {
     state.catalog = data
   },
-  setSchema (state, {data}) {
+  setSchema(state, { data }) {
     state.schema = data
   },
-  setTable (state, {data}) {
+  setTable(state, { data }) {
     state.table = data[0]
     state.tableType = data[1]
   },
-  setColumns (state, {columns, note, meta}) {
+  setColumns(state, { columns, note, meta }) {
     state.columns = columns
     state.note = note
     state.meta = meta
   },
-  setPartitionValues (state, {keys, key, values}) {
+  setPartitionValues(state, { keys, key, values }) {
     const newVal = {}
     for (const k of keys) {
       if (k === key) {
@@ -341,7 +353,7 @@ const mutations = {
     newVal[key] = values
     state.partitionValues = newVal
   },
-  deletePartitionValues (state, {keys, remainKey}) {
+  deletePartitionValues(state, { keys, remainKey }) {
     if (!remainKey) {
       state.partitionValues = {}
     }
@@ -354,25 +366,25 @@ const mutations = {
     }
     state.partitionValues = newVal
   },
-  setSelectedPartitions (state, {data}) {
+  setSelectedPartitions(state, { data }) {
     state.selectedPartitions = data
   },
-  setTableQuery (state, {data}) {
+  setTableQuery(state, { data }) {
     state.tableQuery = data
   },
-  setFilterSchema (state, {data}) {
+  setFilterSchema(state, { data }) {
     state.filterSchema = data
   },
-  setFilterTable (state, {data}) {
+  setFilterTable(state, { data }) {
     state.filterTable = data
   },
-  setLoadingPartitions (state, {loading}) {
+  setLoadingPartitions(state, { loading }) {
     state.loadingPartitions = loading
   },
-  setLoadingTableSearch (state, {loading}) {
+  setLoadingTableSearch(state, { loading }) {
     state.loadingTableSearch = loading
   },
-  setTableSearchResponse (state, {data}) {
+  setTableSearchResponse(state, { data }) {
     state.tableSearchResponse = data
   }
 }

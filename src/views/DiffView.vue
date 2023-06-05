@@ -33,8 +33,8 @@
             </thead>
             <tbody>
               <tr>
-                <td><a :href="buildTopUrl() + buildUrl({datasource, engine, tab: 'result', queryid: queryid1})" target="_blank">{{queryid1}}</a></td>
-                <td><a :href="buildTopUrl() + buildUrl({datasource, engine, tab: 'result', queryid: queryid2})" target="_blank">{{queryid2}}</a></td>
+                <td><a :href="buildTopUrl() + buildUrl({datasource, engine, tab: 'treeview', queryid: queryid1})" target="_blank">{{queryid1}}</a></td>
+                <td><a :href="buildTopUrl() + buildUrl({datasource, engine, tab: 'treeview', queryid: queryid2})" target="_blank">{{queryid2}}</a></td>
               </tr>
             </tbody>
           </table>

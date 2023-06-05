@@ -129,7 +129,7 @@ export default {
       this.$store.commit('editor/setInputQuery', {data: this.demo.chart})
       this.$store.dispatch('result/runQuery')
       this.hideModal('help')
-      this.$store.commit('setHashItem', {tab: 'result'})
+      this.$store.commit('setHashItem', {tab: 'treeview'})
       // chart = 2
     }
   }

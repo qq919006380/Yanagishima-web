@@ -27,7 +27,7 @@
                 <i class="fa fa-fw fa-spinner fa-pulse mr-1"></i>Loading
               </div>
               <div v-else-if="!partitionValues[key] || !partitionValues[key].length" class="card-block">
-                <span class="text-muted">No result</span>
+                <span class="text-muted">暂无数据</span>
               </div>
               <div v-else class="list-group list-group-flush">
                 <template v-for="val in sortedPartitionValues[key]">

@@ -12,7 +12,7 @@ export default {
       return '#' + HASH_KEYS.filter(k => hash[k[0]]).map(k => `${k[0]}=${hash[k[0]]}`).join('&')
     },
     buildShareUrl (datasource, engine, queryid, chart, pivot, line) {
-      return this.buildTopUrl() + '/' + this.buildUrl({datasource, engine, tab: 'result', queryid, chart, pivot, line})
+      return this.buildTopUrl() + '/' + this.buildUrl({datasource, engine, tab: 'treeview', queryid, chart, pivot, line})
     },
     buildDownloadUrl (datasource, queryid, isCsv, includeHeader) {
       return api.buildDownloadUrl(datasource, queryid, isCsv, includeHeader)

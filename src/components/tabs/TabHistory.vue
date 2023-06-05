@@ -2,11 +2,7 @@
   <div>
     <div class="header row align-items-center pt-3">
       <div class="col">
-        <strong class="mr-1">Executed History</strong>
-        <template v-if="isLocalStorage">
-          <span v-if="filteredHistory.length">{{filteredHistory.length}}</span>
-        </template>
-        <template v-else>
+        <template v-if="!isLocalStorage">
           <template v-if="response && response.total">
             <span>{{response.hit}}</span>
             <template v-if="response.total !== response.hit">
@@ -22,11 +18,14 @@
         </template>
       </div>
       <div class="col text-right">
+        {{isLocalStorage}}
         <template v-if="isLocalStorage">
+          a
           <input type="text" class="form-control form-control-sm d-inline-block w-50"
                  placeholder="Filter by Query" v-model="filterModel" v-focus>
         </template>
         <template v-else>
+          b
           <input type="text" class="form-control form-control-sm d-inline-block w-50"
                  placeholder="Search by Query" v-model.lazy="filterModel" v-focus @keyup.enter="getHistories(false)">
         </template>
@@ -43,34 +42,25 @@
         <table v-if="filteredHistory.length" class="table table-bordered table-fixed table-hover">
           <thead>
           <tr>
-            <th width="7%">
-              <button type="button" class="btn btn-sm btn-secondary" @click="compare">
-                <i class="fa fa-thumbs-o-up mr-1"></i>Compare
-              </button>
-            </th>
-            <th width="4%" class="text-right">No</th>
-            <th width="4%">Label</th>
-            <th width="13%">query ID</th>
-            <th width="12%">Finished</th>
-            <th width="6%" class="text-right">Elapsed</th>
-            <th width="41.5%">Query</th>
-            <th width="5%" class="text-center">Set</th>
-            <th width="7.5%" class="text-center">DL Result</th>
+           
+            <th width="15%">Label</th>
+            <th width="13%">查询ID</th>
+            <th width="12%">开始时间</th>
+            <th width="6%" class="text-right">占用时间</th>
+            <th width="41.5%">查询</th>
+            <!-- <th width="5%" class="text-center">Set</th> -->
+            <th width="7.5%" class="text-center">查询结果</th>
           </tr>
           </thead>
           <tbody>
             <tr v-for="(h, i) in filteredHistory" :key="i" class="vertical-top">
-              <td class="text-center">
-                <input type="checkbox" class="mr-1" :value="h[0]" v-model="checkedQueries" :disabled="checkedQueries.length >= 2 && !checkedQueries.includes(h[0])"/>
-              </td>
-              <td class="text-right text-muted">{{i + 1}}</td>
               <td>
                 <template v-if="h[7]">
                   <button type="button" class="btn btn-sm btn-secondary" @click="moveHisotryTab(h[7])">{{h[7]}}</button>
                 </template>
               </td>
               <td>
-                <a :href="buildUrl({datasource, engine, tab: 'result', queryid: h[0]})">{{h[0]}}</a>
+                <a :href="buildUrl({datasource, engine, tab: 'treeview', queryid: h[0]})">{{h[0]}}</a>
               </td>
               <td>
                 {{h[5] | extractDate}}
@@ -81,10 +71,10 @@
               <td>
                 <pre class="ace-font mb-0"><BaseHighlight :sentence="h[1].escapeHTML()" :keyword="filter.escapeHTML()"></BaseHighlight></pre>
               </td>
-              <td class="text-center">
+              <!-- <td class="text-center">
                 <a href="#" class="btn btn-sm btn-secondary" @click.prevent="setQurey(h[1])"
                    title="Set query to editor"><i class="far fa-fw fa-keyboard"></i></a>
-              </td>
+              </td> -->
               <td class="text-right overflow-visible">
                 <div class="btn-group">
                   <a v-if="h[3] !== '0B'" :href="buildDownloadUrl(datasource, h[0], isCsv, includeHeader)" >{{h[3]}}<i
@@ -95,7 +85,7 @@
           </tbody>
         </table>
         <div v-else class="alert alert-warning">
-          <i class="fa fa-fw fa-frown-o mr-1"></i>No result
+          <i class="fa fa-fw fa-frown-o mr-1"></i>暂无数据
         </div>
         <div v-if="!isLocalStorage && hasMore" class="p-3 text-center">
           <button type="button" class="btn btn-primary" @click="getHistories(true)">More</button>
