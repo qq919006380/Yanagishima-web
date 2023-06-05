@@ -12,9 +12,6 @@ export const mixins = {
             activeName: ""
         }
     },
-    mounted() {
-        this.activeName = this.tab
-    },
     computed: {
         ...mapState([
             'settings'
@@ -213,6 +210,9 @@ export const mixins = {
 
     },
     watch: {
+        tab(val) {
+            this.activeName = val
+        },
         inputQuery() {
             this.$store.commit('editor/resetError')
             if (this.addedBookmarkId) {
@@ -221,8 +221,8 @@ export const mixins = {
         }
     },
     methods: {
-
-        handleClick() {
+        handleClick(val) {
+            console.log(val)
             this.setTab(this.activeName)
         },
         setSnippet() {

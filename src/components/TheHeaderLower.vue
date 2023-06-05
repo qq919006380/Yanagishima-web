@@ -33,7 +33,7 @@
                     <Button type="primary" class="mr-2" @click.prevent="addBookmarkItem"
                         :disabled="!inputQuery.length || existBookmark">
                         <i class="far fa-fw fa-star"></i>
-                        <strong>添加到书签</strong>
+                        <strong>收藏夹</strong>
                     </Button>
 
                 </div>

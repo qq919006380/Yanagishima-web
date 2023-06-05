@@ -60,7 +60,7 @@ const actions = {
     const {datasource, engine} = rootState.hash
     const query = rootState.editor.inputQuery
     const defaultTitle = Date.create().format('{yyyy}/{MM}/{dd} {24hr}:{mm}:{ss}')
-    const title = prompt('Input bookmark title.', defaultTitle)
+    const title = prompt('请输入收藏夹标题', defaultTitle)
     if (title === null) {
       return false
     }

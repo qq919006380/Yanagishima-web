@@ -4,34 +4,50 @@
       <div class="col">
         <template v-if="!isLocalStorage">
           <template v-if="response && response.total">
-            <span>{{response.hit}}</span>
+            <span>{{ response.hit }}</span>
             <template v-if="response.total !== response.hit">
               /
-              <span>{{response.total}}</span>
-              <span class="text-muted ml-1">({{(response.hit / response.total * 100).round()}}%)</span>
+              <span>{{ response.total }}</span>
+              <span class="text-muted ml-1">({{ (response.hit / response.total * 100).round() }}%)</span>
             </template>
           </template>
         </template>
         <template v-if="label">
-          <button type="button" class="btn btn-sm btn-secondary" disabled>{{label}}</button>
-          <button type="button" class="btn btn-sm btn-secondary" @click="clearLabel"><i class="fa fa-fw fa-times mr-1"></i></button>
-        </template>
-      </div>
-      <div class="col text-right">
-        {{isLocalStorage}}
-        <template v-if="isLocalStorage">
-          a
-          <input type="text" class="form-control form-control-sm d-inline-block w-50"
-                 placeholder="Filter by Query" v-model="filterModel" v-focus>
-        </template>
-        <template v-else>
-          b
-          <input type="text" class="form-control form-control-sm d-inline-block w-50"
-                 placeholder="Search by Query" v-model.lazy="filterModel" v-focus @keyup.enter="getHistories(false)">
+          <button type="button" class="btn btn-sm btn-secondary" disabled>{{ label }}</button>
+          <button type="button" class="btn btn-sm btn-secondary" @click="clearLabel"><i
+              class="fa fa-fw fa-times mr-1"></i></button>
         </template>
       </div>
     </div>
+    <Form ref="form" :model="form" label-width="70px">
+      <div class="row justify-content-center">
+        <div class="col-3">
+          <FormItem label="任务ID">
+            <Input size="small" v-model="form.id"></Input>
+          </FormItem>
+        </div>
+        <div class="col-3">
+          <FormItem label="开始时间">
+            <DatePicker value-format="yyyy-MM-dd" style="width:100%" size="small" v-model="form.date" type="daterange"
+              range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期">
+            </DatePicker>
+          </FormItem>
+        </div>
+        <div class="col-3">
+          <FormItem label="SQL语句">
+            <Input size="small" v-model="form.sql"></Input>
+          </FormItem>
+        </div>
+        <div class="col-3">
+          <FormItem>
+            <Button size="small" type="primary" @click="search">查询</Button>
+            <Button size="small" @click="reset">重置</Button>
+          </FormItem>
+        </div>
 
+      </div>
+
+    </Form>
     <div>
       <template v-if="loading">
         <div class="alert alert-info">
@@ -41,35 +57,36 @@
       <template v-else>
         <table v-if="filteredHistory.length" class="table table-bordered table-fixed table-hover">
           <thead>
-          <tr>
-           
-            <th width="15%">Label</th>
-            <th width="13%">查询ID</th>
-            <th width="12%">开始时间</th>
-            <th width="6%" class="text-right">占用时间</th>
-            <th width="41.5%">查询</th>
-            <!-- <th width="5%" class="text-center">Set</th> -->
-            <th width="7.5%" class="text-center">查询结果</th>
-          </tr>
+            <tr>
+              <th width="5%">序号</th>
+              <th width="20%">任务ID</th>
+              <th width="15%">开始时间</th>
+              <th width="7%" class="text-right">占用时间</th>
+              <th width="41.5%">查询</th>
+              <!-- <th width="5%" class="text-center">Set</th> -->
+              <th width="7.5%" class="text-center">查询结果</th>
+            </tr>
           </thead>
           <tbody>
             <tr v-for="(h, i) in filteredHistory" :key="i" class="vertical-top">
+              <!-- 序号 -->
               <td>
-                <template v-if="h[7]">
-                  <button type="button" class="btn btn-sm btn-secondary" @click="moveHisotryTab(h[7])">{{h[7]}}</button>
-                </template>
+                {{ i + 1 }}
               </td>
+              <!-- 任务ID -->
               <td>
-                <a :href="buildUrl({datasource, engine, tab: 'treeview', queryid: h[0]})">{{h[0]}}</a>
+                <a :href="buildUrl({ datasource, engine, tab: 'treeview', queryid: h[0] })">{{ h[0] }}</a>
               </td>
+              <!-- 开始时间 -->
               <td>
-                {{h[5] | extractDate}}
+                {{ h[5] | extractDate }}
               </td>
               <td class="text-right">
-                {{(h[2] / 1000).ceil(2)}}s
+                {{ (h[2] / 1000).ceil(2) }}s
               </td>
               <td>
-                <pre class="ace-font mb-0"><BaseHighlight :sentence="h[1].escapeHTML()" :keyword="filter.escapeHTML()"></BaseHighlight></pre>
+                <pre
+                  class="ace-font mb-0"><BaseHighlight :sentence="h[1].escapeHTML()" :keyword="filter.escapeHTML()"></BaseHighlight></pre>
               </td>
               <!-- <td class="text-center">
                 <a href="#" class="btn btn-sm btn-secondary" @click.prevent="setQurey(h[1])"
@@ -77,8 +94,8 @@
               </td> -->
               <td class="text-right overflow-visible">
                 <div class="btn-group">
-                  <a v-if="h[3] !== '0B'" :href="buildDownloadUrl(datasource, h[0], isCsv, includeHeader)" >{{h[3]}}<i
-                    class="fa fa-fw fa-download ml-1"></i></a>
+                  <a v-if="h[3] !== '0B'" :href="buildDownloadUrl(datasource, h[0], isCsv, includeHeader)">{{ h[3] }}<i
+                      class="fa fa-fw fa-download ml-1"></i></a>
                 </div>
               </td>
             </tr>
@@ -96,15 +113,30 @@
 </template>
 
 <script>
-import {mapState, mapGetters} from 'vuex'
+import { mapState, mapGetters } from 'vuex'
+import dayjs from 'dayjs'
+import isBetween from 'dayjs/plugin/isBetween'
 import util from '@/mixins/util'
-
+import { Form, FormItem, Input, Button, DatePicker } from "element-ui";
+dayjs.extend(isBetween)
 export default {
+  components: { Form, FormItem, Input, Button, DatePicker },
   name: 'TabHistory',
   mixins: [util],
-  data () {
+  data() {
     return {
-      checkedQueries: []
+      checkedQueries: [],
+      filteredHistory: [],
+      form: {
+        id: "",
+        date: "",
+        sql: "",
+      }
+    }
+  },
+  watch: {
+    'response.results'() {
+      this.filteredHistory = this.response.results
     }
   },
   computed: {
@@ -124,50 +156,67 @@ export default {
     ...mapGetters('history', [
       'hasMore'
     ]),
-    filterModel: {
-      get () {
-        return this.filter
-      },
-      set (val) {
-        this.$store.commit('history/setFilter', {data: val})
+
+
+  },
+  mounted() {
+    this.getHistories()
+     
+
+  },
+  methods: {
+    extractDate(val) {
+      const dt = val.first(19)
+      return Date.create(dt).format('{yyyy}-{MM}-{dd}')
+    },
+    // 对比查询时间
+    diffDate(query, dates) {
+      console.log(dayjs)
+      const isBetween = dayjs(query).isBetween(dates[0], dates[1], null, '[]');
+      return isBetween
+    },
+    // 对比查询字符串
+    diffSc(query, data) {
+      if (query) {
+        return data.includes(query)
+      } else {
+        return false
       }
     },
-    filteredHistory () {
+    search() {
       if (!(this.response && this.response.results)) {
         return []
       }
+      var allEmty = Object.values(this.form).every(v => {
+        return !v
+      })
 
-      const history = this.response.results.filter(h => h[4] === this.engine)
-
-      if (this.isLocalStorage) {
-        const filter = this.filter.trim()
-        const filters = filter.includes(' ') ? filter.split(' ').unique() : [filter]
-        return history.filter(h => filters.every(f => new RegExp(RegExp.escape(f), 'ig').test(h[1])))
-      } else {
-        return history
-      }
-    }
-  },
-  mounted () {
-    this.getHistories()
-  },
-  methods: {
-    getHistories (isMore) {
-      this.$store.dispatch('history/getHistories', {isMore})
+      this.filteredHistory = this.response.results.filter(v => {
+        console.log(v)
+        return this.diffSc(this.form.id, v[0]) || this.diffSc(this.form.sql, v[1]) || this.diffDate(this.extractDate(v[5]), this.form.date) || allEmty
+      })
+      console.log(this.filteredHistory)
     },
-    setQurey (query) {
-      this.$store.commit('editor/setInputQuery', {data: query})
+    reset() {
+      Object.assign(this.form, this.$options.data().form)
+      this.search()
+    },
+    getHistories(isMore) {
+      this.$store.dispatch('history/getHistories', { isMore })
+    },
+    setQurey(query) {
+      this.$store.commit('editor/setInputQuery', { data: query })
       this.$store.commit('editor/focusOnEditor')
     },
-    clearLabel () {
-      this.$store.commit('history/setLabel', {data: null})
-      this.$store.dispatch('history/getHistories', {isMore: false})
+    clearLabel() {
+      this.$store.commit('history/setLabel', { data: null })
+      this.$store.dispatch('history/getHistories', { isMore: false })
     },
-    moveHisotryTab (label) {
-      this.$store.commit('history/setLabel', {data: label})
-      this.$store.dispatch('history/getHistories', {isMore: false})
+    moveHisotryTab(label) {
+      this.$store.commit('history/setLabel', { data: label })
+      this.$store.dispatch('history/getHistories', { isMore: false })
     },
-    compare () {
+    compare() {
       const path = `/diff/?datasource=${this.datasource}&engine=${this.engine}&queryid1=${this.checkedQueries[0]}&queryid2=${this.checkedQueries[1]}`
       window.open(path, '_blank')
     }
@@ -175,5 +224,4 @@ export default {
 }
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
