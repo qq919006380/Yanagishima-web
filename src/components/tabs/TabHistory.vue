@@ -161,7 +161,7 @@ export default {
   },
   mounted() {
     this.getHistories()
-     
+
 
   },
   methods: {
@@ -170,17 +170,21 @@ export default {
       return Date.create(dt).format('{yyyy}-{MM}-{dd}')
     },
     // 对比查询时间
-    diffDate(query, dates) {
-      console.log(dayjs)
-      const isBetween = dayjs(query).isBetween(dates[0], dates[1], null, '[]');
-      return isBetween
+    diffDate(query, date) {
+      if (query) {
+        const isBetween = dayjs(date).isBetween(query[0], query[1], null, '[]');
+        return isBetween
+      } else {
+        return true
+      }
+
     },
     // 对比查询字符串
     diffSc(query, data) {
       if (query) {
         return data.includes(query)
       } else {
-        return false
+        return true
       }
     },
     search() {
@@ -193,7 +197,13 @@ export default {
 
       this.filteredHistory = this.response.results.filter(v => {
         console.log(v)
-        return this.diffSc(this.form.id, v[0]) || this.diffSc(this.form.sql, v[1]) || this.diffDate(this.extractDate(v[5]), this.form.date) || allEmty
+        // if (allEmty) {
+        //   return true
+        // } else {
+        console.log(this.diffSc(this.form.id, v[0]), this.diffSc(this.form.sql, v[1]), this.diffDate(this.form.date,this.extractDate(v[5])))
+        return this.diffSc(this.form.id, v[0]) && this.diffSc(this.form.sql, v[1]) && this.diffDate(this.form.date,this.extractDate(v[5]))
+        // }
+
       })
       console.log(this.filteredHistory)
     },
