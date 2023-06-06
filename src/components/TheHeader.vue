@@ -2,7 +2,7 @@
   <header id="header">
     <TheSettings v-if="isSettingOpen"/>
     <div id="header-main" :class="`engine_${engine}`">
-      <div class="container">
+      <div class="container header-card">
         <!-- <TheHeaderUpper @logo-click="$emit('logo-click')"/> -->
         <TheHeaderLower style="margin-top: 20px;" />
       </div>
@@ -33,4 +33,9 @@ export default {
 </script>
 
 <style scoped>
+.header-card {
+    border-radius: 8px;
+    background-color: white;
+    padding: 12px 8px 8px 8px;
+}
 </style>

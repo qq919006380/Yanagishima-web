@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="header row align-items-center pt-3">
+    <div class="row align-items-center pt-3 mb-4">
       <div>
         <template v-if="loading">
           <template v-if="runningProgress">
@@ -51,16 +51,12 @@
                 <strong>{{ response.headers.length }}</strong><span class="text-muted ml-1">字段</span>
               </span>
             </span>
-            <span v-else><strong>查询结果</strong></span>
           </template>
         </template>
       </div>
       <template v-if="response && response.results">
-        <div class=" text-right">
-          <!-- <label class="ml-2">
-            <input type="checkbox" v-model="isPrettyModel" :disabled="actionDisabled">
-            Pretty print
-          </label> -->
+        <div class=" text-right   ">
+        
           <div>
             <Execution></Execution>
             <Popover placement="bottom" width="80" trigger="click">
@@ -74,12 +70,7 @@
               </div>
               <Button slot="reference" type="primary" size="small" @click="openUrl" :disabled="actionDisabled">下载</Button>
             </Popover>
-
           </div>
-          <!-- <button class="btn btn-sm btn-secondary ml-2" :disabled="actionDisabled" @click="publish" data-toggle="tooltip"
-            data-animation="false" title="Publish Readonly Result">
-            <i class="fa fa-fw fa-globe mr-1"></i>Publish
-          </button> -->
         </div>
       </template>
     </div>

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="header row align-items-center pt-3">
+    <div class=" row align-items-center  ">
       <div class="col">
         <template v-if="!isLocalStorage">
           <template v-if="response && response.total">
@@ -191,18 +191,9 @@ export default {
       if (!(this.response && this.response.results)) {
         return []
       }
-      var allEmty = Object.values(this.form).every(v => {
-        return !v
-      })
-
       this.filteredHistory = this.response.results.filter(v => {
-        console.log(v)
-        // if (allEmty) {
-        //   return true
-        // } else {
-        console.log(this.diffSc(this.form.id, v[0]), this.diffSc(this.form.sql, v[1]), this.diffDate(this.form.date,this.extractDate(v[5])))
-        return this.diffSc(this.form.id, v[0]) && this.diffSc(this.form.sql, v[1]) && this.diffDate(this.form.date,this.extractDate(v[5]))
-        // }
+        console.log(this.diffSc(this.form.id, v[0]), this.diffSc(this.form.sql, v[1]), this.diffDate(this.form.date, this.extractDate(v[5])))
+        return this.diffSc(this.form.id, v[0]) && this.diffSc(this.form.sql, v[1]) && this.diffDate(this.form.date, this.extractDate(v[5]))
 
       })
       console.log(this.filteredHistory)

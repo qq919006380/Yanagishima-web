@@ -1,16 +1,5 @@
 <template>
   <div>
-    <div class="header row align-items-center pt-3">
-      <div class="col">
-        <strong class="mr-1">Bookmark</strong>
-        <span v-if="response && response.length">{{response.length}}</span>
-      </div>
-      <div class="col text-right">
-        <input type="text" class="form-control form-control-sm d-inline-block mr-2 w-50 invisible"
-               placeholder="Filter by Title">
-      </div>
-    </div>
-
     <div>
       <template v-if="loading">
         <div class="alert alert-info">
@@ -20,36 +9,32 @@
       <template v-else>
         <table class="table table-bordered table-fixed table-hover" v-if="response && response.length">
           <thead>
-          <tr>
-            <th width="5%" class="text-right">ID</th>
-            <th width="20%">Title</th>
-            <th width="65%">Query</th>
-            <th width="5%" class="text-center">Set</th>
-            <th width="5%" class="text-center">Del</th>
-          </tr>
+            <tr>
+              <th width="5%" class="text-right">ID</th>
+              <th width="20%">标题</th>
+              <th width="60%">查询</th>
+              <th width="15%" class="text-center">操作</th>
+            </tr>
           </thead>
           <tbody>
-          <tr class="vertical-top" v-for="item in response" :key="item.bookmark_id"
-              :class="{'table-warning': item.bookmark_id === addedBookmarkId}">
-            <td class="text-right">
-              {{item.bookmark_id}}
-            </td>
-            <td>
-              <template v-if="item.title">{{item.title}}</template>
-              <span class="text-muted" v-else>(none)</span>
-            </td>
-            <td>
-              <BaseAce :code="item.query" :readonly="true" css-class="bg-transparent"></BaseAce>
-            </td>
-            <td class="text-center">
-              <a href="#" class="btn btn-sm btn-secondary" @click.prevent="setBookmark(item)"
-                 data-dismiss="modal" title="Set query to editor"><i class="far fa-fw fa-keyboard"></i></a>
-            </td>
-            <td class="text-center">
-              <a href="#" class="btn btn-sm btn-secondary" @click.prevent="deleteBookmark(item.bookmark_id)"><i
-                class="fa fa-fw fa-trash"></i></a>
-            </td>
-          </tr>
+            <tr class="vertical-top" v-for="item in response" :key="item.bookmark_id"
+              :class="{ 'table-warning': item.bookmark_id === addedBookmarkId }">
+              <td class="text-right">
+                {{ item.bookmark_id }}
+              </td>
+              <td>
+                <template v-if="item.title">{{ item.title }}</template>
+                <span class="text-muted" v-else>(none)</span>
+              </td>
+              <td>
+                <BaseAce :code="item.query" :readonly="true" css-class="bg-transparent"></BaseAce>
+              </td>
+
+              <td class="text-center">
+                <a href="#" class="btn btn-sm btn-secondary" @click.prevent="setBookmark(item)"> 配置</a>
+                <a href="#" class="btn btn-sm btn-secondary"  @click.prevent="deleteBookmark(item.bookmark_id)">取消收藏 </a>
+              </td>
+            </tr>
           </tbody>
         </table>
         <div class="alert alert-warning" v-else>
@@ -61,10 +46,11 @@
 </template>
 
 <script>
-import {mapState} from 'vuex'
-
+import { mapState } from 'vuex'
+import { Link } from "element-ui";
 export default {
   name: 'TabBookmark',
+  components: { Link },
   computed: {
     ...mapState('bookmark', [
       'bookmarks',
@@ -74,19 +60,18 @@ export default {
     ])
   },
   methods: {
-    setBookmark (bookmark) {
-      this.$store.commit('editor/setInputQuery', {data: bookmark.query})
+    setBookmark(bookmark) {
+      this.$store.commit('editor/setInputQuery', { data: bookmark.query })
       this.$store.commit('editor/focusOnEditor')
-      this.$store.commit('result/setResponse', {data: null})
-      this.$store.commit('result/setQueryString', {data: ''})
-      this.$store.commit('setHashItem', {bookmark_id: bookmark.bookmark_id, queryid: ''})
+      this.$store.commit('result/setResponse', { data: null })
+      this.$store.commit('result/setQueryString', { data: '' })
+      this.$store.commit('setHashItem', { bookmark_id: bookmark.bookmark_id, queryid: '' })
     },
-    deleteBookmark (bookmarkId) {
-      this.$store.dispatch('bookmark/deleteBookmarkItem', {bookmarkId})
+    deleteBookmark(bookmarkId) {
+      this.$store.dispatch('bookmark/deleteBookmarkItem', { bookmarkId })
     }
   }
 }
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

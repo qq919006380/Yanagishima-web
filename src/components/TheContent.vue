@@ -1,6 +1,6 @@
 <template>
   <div id="content" :class="{open: isBottomPanelOpen}">
-    <div :class="isWide ? 'container-fluid' : 'container'">
+    <div :class="isWide ? 'container-fluid' : 'container'" class="container-card">
       <TabQlist v-if="tab === 'qlist'"/>
       <TabHistory v-else-if="tab === 'history'"/>
       <TabBookmark v-else-if="tab === 'bookmark'"/>
@@ -43,4 +43,9 @@ export default {
 </script>
 
 <style scoped>
+.container-card{
+  background-color: white;
+  margin-top: 1rem;
+  border-radius: 8px;
+}
 </style>

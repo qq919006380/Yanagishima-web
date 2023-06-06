@@ -17,34 +17,32 @@
                 </template>
             </div>
         </fieldset>
+
         <div class="row align-items-end">
             <div class="col pb-2">
-                <div class="btn-group ml-3">
-                    <Button type="primary" class="mr-2" :disabled="!inputQuery.length || loading || !datasourceIndex"
-                        @click="runQuery()">
-                        <i class="fa fa-fw fa-play mr-1"></i>
-                        <strong>运行</strong>
-                    </Button>
-                    <Button v-if="isPresto" type="primary" class="mr-2" @click.prevent="formatQuery"
-                        :disabled="!inputQuery.length || loading">
-                        <i class="fa fa-fw fa-indent"></i>
-                        <strong>SQL格式化</strong>
-                    </Button>
-                    <Button type="primary" class="mr-2" @click.prevent="addBookmarkItem"
-                        :disabled="!inputQuery.length || existBookmark">
-                        <i class="far fa-fw fa-star"></i>
-                        <strong>收藏夹</strong>
-                    </Button>
-
-                </div>
-
+                <Button type="primary" class="mr-2" :disabled="!inputQuery.length || loading || !datasourceIndex"
+                    @click="runQuery()">
+                    <i class="fa fa-fw fa-play mr-1"></i>
+                    <strong>运行</strong>
+                </Button>
+                <Button v-if="isPresto" type="primary" class="mr-2" @click.prevent="formatQuery"
+                    :disabled="!inputQuery.length || loading">
+                    <i class="fa fa-fw fa-indent"></i>
+                    <strong>SQL格式化</strong>
+                </Button>
+                <Button type="primary" class="mr-2" @click.prevent="addBookmarkItem"
+                    :disabled="!inputQuery.length || existBookmark">
+                    <i class="far fa-fw fa-star"></i>
+                    <strong>收藏夹</strong>
+                </Button>
             </div>
             <div class="col text-right">
                 <!-- Set/Run snippet buttons -->
                 <div v-if="table">
                     <Checkbox v-model="isExpandColumns">展开列</Checkbox>
                     <Select size="small" id="snippet" style="width:60%;" v-model="snippetIndex">
-                        <Option v-for="(item, i) in snippets" v-if="item.enable.includes(tableType)" :label="item.label" :value="i" :key="i">
+                        <Option v-for="(item, i) in snippets" v-if="item.enable.includes(tableType)" :label="item.label"
+                            :value="i" :key="i">
                             {{ item.label }}
                         </Option>
                     </Select>
@@ -56,10 +54,12 @@
             </div>
         </div>
         <Tabs v-model="activeName" @tab-click="handleClick">
-            <Tab-pane v-for="t in tabs" :key="t.id"  :name="t.id">
-                <span slot="label"><i class="fa-fw mr-1" :class="`${t.iconStyle || 'fas'} fa-${t.icon}`"></i>{{ t.name }} </span>
+            <Tab-pane v-for="t in tabs" :key="t.id" :name="t.id">
+                <span slot="label"><i class="fa-fw mr-1" :class="`${t.iconStyle || 'fas'} fa-${t.icon}`"></i>{{ t.name
+                }} </span>
             </Tab-pane>
         </Tabs>
+
 
         <!-- <div class="col text-right pb-2">
                 <div id="control" class="d-inline-block">
@@ -89,4 +89,6 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+
+</style>

@@ -149,12 +149,6 @@
       </div>
     </div>
 
-    <footer id="footer" class="py-3">
-      <address class="text-center">
-        <span><strong>&copy; yanagishima</strong> by wyukawa and okazou</span>
-      </address>
-    </footer>
-
     <div id="comment" class="card" :class="{conpact: !visibleComment}" v-if="response && response.comment">
       <div class="card-header">
         <div class="d-flex justify-content-between align-items-center">
