@@ -4,10 +4,10 @@
       <div>
         <template v-if="loading">
           <template v-if="runningProgress">
-            <strong>Running</strong>
+            <strong>执行中...</strong>
             <span class="ml-2">{{ runningQueryid }}</span>
           </template>
-          <strong v-else>Loading</strong>
+          <strong v-else>加载中...</strong>
         </template>
         <template v-else>
           <template v-if="response && response.error || error">
@@ -56,7 +56,6 @@
       </div>
       <template v-if="response && response.results">
         <div class=" text-right   ">
-        
           <div>
             <Execution></Execution>
             <Popover placement="bottom" width="80" trigger="click">
